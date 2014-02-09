@@ -1,9 +1,8 @@
 Files in this folder
 --------------------
 
-SS-Backup - Beta.exe          -- The main executable
-SS-Backup - Beta - Source.zip -- The source
-bsc.vim                       -- VIM syntax highlighting for Scripts
+SS-Backup - Beta.exe -- The main executable
+bsc.vim              -- VIM syntax highlighting for Scripts
 
 Release notes
 -------------
