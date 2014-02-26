@@ -90,8 +90,8 @@ bool ENGINE::Valid(){
 void ENGINE::UpdateStatus(){
  if(!Valid()) return;
 
- Tasks->Status.Set((double)(DoneSize / ListSize) * 100.0, 4, true);
- Tasks->Status.Append('%');
+ Tasks->Status.SetFloat((double)(DoneSize / ListSize) * 100.0, 4, true);
+ Tasks->Status += '%';
 
  DWORD Time = GetTickCount();
  if(DoneSize == 0){
@@ -111,10 +111,10 @@ bool ENGINE::Flush(FileWrapper* File, const char* Buffer, unsigned Used){
   MutEx.Release();
    if(Used - Index <= BufferSize){
     if(File->Write(Buffer + Index, Used - Index) != Used - Index){
-     LogBuffer.Append("Could not write to file:\r\n");
-     LogBuffer.Append(" Error code ");
+     LogBuffer += "Could not write to file:\r\n";
+     LogBuffer += " Error code ";
      AppendError     (&LogBuffer);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "\r\n";
      MutEx.Obtain();
      return false;
     }
@@ -123,10 +123,10 @@ bool ENGINE::Flush(FileWrapper* File, const char* Buffer, unsigned Used){
 
    }else{
     if(File->Write(Buffer + Index, BufferSize) != BufferSize){
-     LogBuffer.Append("Could not write to file:\r\n");
-     LogBuffer.Append(" Error code ");
+     LogBuffer += "Could not write to file:\r\n";
+     LogBuffer += " Error code ";
      AppendError     (&LogBuffer);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "\r\n";
      MutEx.Obtain();
      return false;
     }
@@ -147,24 +147,24 @@ bool ENGINE::Copy(LIST* Item){
  FileWrapper Source;
  FileWrapper Destination;
 
- if(!Source.Open(Item->Source.String, FileWrapper::faRead)){
-  LogBuffer.Append("Could not open file for reading:\r\n ");
-  LogBuffer.Append(&Item->Source);
-  LogBuffer.Append("\r\n");
-  LogBuffer.Append(" Error code ");
+ if(!Source.Open(Item->Source.UTF8(), FileWrapper::faRead)){
+  LogBuffer += "Could not open file for reading:\r\n ";
+  LogBuffer += Item->Source;
+  LogBuffer += "\r\n";
+  LogBuffer += " Error code ";
   AppendError     (&LogBuffer);
-  LogBuffer.Append("\r\n");
+  LogBuffer += "\r\n";
   return false;
  }
 
- if(!Destination.Open(Item->Destination.String, FileWrapper::faCreate)){
+ if(!Destination.Open(Item->Destination.UTF8(), FileWrapper::faCreate)){
   Source.Close();
-  LogBuffer.Append("Could not open file for writing:\r\n ");
-  LogBuffer.Append(&Item->Destination);
-  LogBuffer.Append("\r\n");
-  LogBuffer.Append(" Error code ");
+  LogBuffer += "Could not open file for writing:\r\n ";
+  LogBuffer += Item->Destination;
+  LogBuffer += "\r\n";
+  LogBuffer += " Error code ";
   AppendError     (&LogBuffer);
-  LogBuffer.Append("\r\n");
+  LogBuffer += "\r\n";
   return false;
  }
 
@@ -212,10 +212,10 @@ bool ENGINE::Copy(LIST* Item){
 
    MutEx.Release();
     if(Source.Read(Buffer + Used, (unsigned)Remaining) != Remaining){
-     LogBuffer.Append("Could not read from file:\r\n");
-     LogBuffer.Append(" Error code ");
+     LogBuffer += "Could not read from file:\r\n";
+     LogBuffer += " Error code ";
      AppendError     (&LogBuffer);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "\r\n";
      MutEx.Obtain();
      return false;
     }
@@ -232,10 +232,10 @@ bool ENGINE::Copy(LIST* Item){
 
    MutEx.Release();
     if(Source.Read(Buffer + Used, (unsigned)BufferSize) != BufferSize){
-     LogBuffer.Append("Could not read from file:\r\n");
-     LogBuffer.Append(" Error code ");
+     LogBuffer += "Could not read from file:\r\n";
+     LogBuffer += " Error code ";
      AppendError     (&LogBuffer);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "\r\n";
      MutEx.Obtain();
      return false;
     }
@@ -265,7 +265,7 @@ bool ENGINE::Copy(LIST* Item){
  if(!Valid()){ // Stopped mid-copy, so the destination is invalid => Delete it.
   FILE_SYSTEM FileSystem;
   MutEx.Release();
-   FileSystem.Delete(Item->Destination.String);
+   FileSystem.Delete(Item->Destination.UTF8());
   MutEx.Obtain();
   return false;
  }
@@ -294,9 +294,9 @@ void ENGINE::AppendError(STRING* String){
  while(j >= 0 && (Message[j] == '\r' || Message[j] == '\n')) j--;
  Message[j+1] = 0;
 
- String->Append((int)Error);
- String->Append(": ");
- String->Append(Message);
+ *String += (int)Error;
+ *String += ": ";
+ *String += Message;
 }
 //------------------------------------------------------------------------------
 
@@ -321,17 +321,17 @@ void ENGINE::CreateFolder(char* Folder){
   CreateFolder(Folder); // Create parent levels
 
   if(FileSystem.CreateFolder(Folder)){ // Create this level
-   LogBuffer.Append("Created folder:\r\n ");
-   LogBuffer.Append(Folder);
-   LogBuffer.Append("\r\n");
+   LogBuffer += "Created folder:\r\n ";
+   LogBuffer += Folder;
+   LogBuffer += "\r\n";
   }else{
 
-   LogBuffer.Append("Failed to create folder:\r\n ");
-   LogBuffer.Append(Folder);
-   LogBuffer.Append("\r\n");
-   LogBuffer.Append(" Error code ");
+   LogBuffer += "Failed to create folder:\r\n ";
+   LogBuffer += Folder;
+   LogBuffer += "\r\n";
+   LogBuffer += " Error code ";
    AppendError     (&LogBuffer);
-   LogBuffer.Append("\r\n");
+   LogBuffer += "\r\n";
   }
  }
 
@@ -362,17 +362,17 @@ ENGINE::LIST* ENGINE::Enqueue(
 ){
  LIST* Item = new LIST;
 
- Item->Source     .Set   (Source);
- Item->Destination.Set   (Destination);
- Item->Source     .Append(Name);
- Item->Destination.Append(Name);
- Item->Size       = Size;
- Item->Modified   = Modified;
- Item->Next       = 0;
+ Item->Source       = Source;
+ Item->Destination  = Destination;
+ Item->Source      += *Name;
+ Item->Destination += *Name;
+ Item->Size         = Size;
+ Item->Modified     = Modified;
+ Item->Next         = 0;
 
  if(Folder){
-  Item->Source     .Append('\\');
-  Item->Destination.Append('\\');
+  Item->Source      += '\\';
+  Item->Destination += '\\';
  }
 
  if(List) ListLast->Next = Item;
@@ -402,7 +402,7 @@ void ENGINE::BuildItems(const char* SourcePath, const char* DestinationPath){
   Item = Enqueue(SourcePath, DestinationPath, &File->Name, 0, 0, true);
 
   // Then backup its contents
-  BuildItems(Item->Source.String, Item->Destination.String);
+  BuildItems(Item->Source.UTF8(), Item->Destination.UTF8());
 
   File = FileSystem.NextFolder();
  }
@@ -425,15 +425,15 @@ void ENGINE::BuildItems(const char* SourcePath, const char* DestinationPath){
 //------------------------------------------------------------------------------
 
 bool ENGINE::IsFolder(STRING* File){
- return File->String[File->Length()-1] == '\\';
+ return File->UTF8()[File->Length8()-1] == '\\';
 }
 //------------------------------------------------------------------------------
 
 char* ENGINE::GetPath(STRING* File){
  int   j;
- char* Path = new char[File->Length()+1];
+ char* Path = new char[File->Length8()+1];
 
- for(j = 0; File->String[j]; j++) Path[j] = File->String[j];
+ for(j = 0; File->UTF8()[j]; j++) Path[j] = File->UTF8()[j];
  j--;
  while(j >= 0 && Path[j] != '\\') j--;
  Path[j+1] = 0;
@@ -485,24 +485,24 @@ bool ENGINE::ContentsEqual(LIST* Item){
  FileWrapper Source;
  FileWrapper Destination;
 
- if(!Source.Open(Item->Source.String, FileWrapper::faRead)){
-  LogBuffer.Append("Could not open file for reading:\r\n");
-  LogBuffer.Append(&Item->Source);
-  LogBuffer.Append("\r\n");
-  LogBuffer.Append("Error code ");
+ if(!Source.Open(Item->Source.UTF8(), FileWrapper::faRead)){
+  LogBuffer += "Could not open file for reading:\r\n";
+  LogBuffer += Item->Source;
+  LogBuffer += "\r\n";
+  LogBuffer += "Error code ";
   AppendError     (&LogBuffer);
-  LogBuffer.Append("\r\n");
+  LogBuffer += "\r\n";
   return false;
  }
 
- if(!Destination.Open(Item->Destination.String, FileWrapper::faRead)){
+ if(!Destination.Open(Item->Destination.UTF8(), FileWrapper::faRead)){
   Source.Close();
-  LogBuffer.Append("Could not open file for reading:\r\n");
-  LogBuffer.Append(&Item->Destination);
-  LogBuffer.Append("\r\n");
-  LogBuffer.Append("Error code ");
+  LogBuffer += "Could not open file for reading:\r\n";
+  LogBuffer += Item->Destination;
+  LogBuffer += "\r\n";
+  LogBuffer += "Error code ";
   AppendError     (&LogBuffer);
-  LogBuffer.Append("\r\n");
+  LogBuffer += "\r\n";
   return false;
  }
 
@@ -623,49 +623,49 @@ bool ENGINE::MoveToIncremental(const char* File, const char* Incremental){
  STRING      Destination;
  FILE_SYSTEM FileSystem;
 
- Destination.Set(Incremental);
+ Destination = Incremental;
  for(j = 0; File[j]; j++){
   switch(File[j]){
    case '\\':
-    if(!j || File[j+1] == '\\') Destination.Append("%5C");
-    else                        Destination.Append('\\');
+    if(!j || File[j+1] == '\\') Destination += "%5C";
+    else                        Destination += '\\';
     break;
 
    case '/':
-    Destination.Append("%2F");
+    Destination += "%2F";
     break;
 
    case ':':
-    Destination.Append("%3A");
-//    Destination.Append("-Drive");
+    Destination += "%3A";
+//    Destination += "-Drive";
     break;
 
    case '*':
-    Destination.Append("%2A");
+    Destination += "%2A";
     break;
 
    case '?':
-    Destination.Append("%3F");
+    Destination += "%3F";
     break;
 
    case '"':
-    Destination.Append("%22");
+    Destination += "%22";
     break;
 
    case '<':
-    Destination.Append("%3C");
+    Destination += "%3C";
     break;
 
    case '>':
-    Destination.Append("%3E");
+    Destination += "%3E";
     break;
 
    case '|':
-    Destination.Append("%7C");
+    Destination += "%7C";
     break;
 
    default:
-    Destination.Append(File[j]);
+    Destination += File[j];
     break;
   }
  }
@@ -674,48 +674,48 @@ bool ENGINE::MoveToIncremental(const char* File, const char* Incremental){
  CreateFolder(Path);
  delete[] Path;
 
- if(FileSystem.Rename(File, Destination.String)){
-  LogBuffer.Append("Moved file:\r\n");
-  LogBuffer.Append(" Source:      ");
-  LogBuffer.Append(File);
-  LogBuffer.Append("\r\n");
-  LogBuffer.Append(" Destination: ");
-  LogBuffer.Append(Destination.String);
-  LogBuffer.Append("\r\n");
+ if(FileSystem.Rename(File, Destination.UTF8())){
+  LogBuffer += "Moved file:\r\n";
+  LogBuffer += " Source:      ";
+  LogBuffer += File;
+  LogBuffer += "\r\n";
+  LogBuffer += " Destination: ";
+  LogBuffer += Destination.UTF8();
+  LogBuffer += "\r\n";
 
  }else{
-  LogBuffer.Append("Failed to move file, trying copy-delete cycle:\r\n");
-  LogBuffer.Append(" Source:      ");
-  LogBuffer.Append(File);
-  LogBuffer.Append("\r\n");
-  LogBuffer.Append(" Destination: ");
-  LogBuffer.Append(Destination.String);
-  LogBuffer.Append("\r\n");
-  LogBuffer.Append(" Error code ");
+  LogBuffer += "Failed to move file, trying copy-delete cycle:\r\n";
+  LogBuffer += " Source:      ";
+  LogBuffer += File;
+  LogBuffer += "\r\n";
+  LogBuffer += " Destination: ";
+  LogBuffer += Destination.UTF8();
+  LogBuffer += "\r\n";
+  LogBuffer += " Error code ";
   AppendError     (&LogBuffer);
-  LogBuffer.Append("\r\n");
+  LogBuffer += "\r\n";
 
   LIST Item;
-  Item.Source     .Set( File);
-  Item.Destination.Set(&Destination);
+  Item.Source      = File;
+  Item.Destination = Destination;
   Item.Size     = 0;
   Item.Modified = 0;
   Item.Next     = 0;
 
   if(Copy(&Item)){
-   LogBuffer.Append(" Copy successful\r\n");
+   LogBuffer += " Copy successful\r\n";
 
    if(FileSystem.Delete(File)){
-    LogBuffer.Append(" Delete successful\r\n");
+    LogBuffer += " Delete successful\r\n";
    }else{
-    LogBuffer.Append(" Failed to delete file:\r\n");
-    LogBuffer.Append("  Error code ");
+    LogBuffer += " Failed to delete file:\r\n";
+    LogBuffer += "  Error code ";
     AppendError     (&LogBuffer);
-    LogBuffer.Append("\r\n");
+    LogBuffer += "\r\n";
     return false;
    }
   }else{
-   LogBuffer.Append(" Failed to copy file:\r\n");
+   LogBuffer += " Failed to copy file:\r\n";
    return false;
   }
  }
@@ -734,10 +734,10 @@ void ENGINE::BackupList(STRING* Incremental){
   List = List->Next;
 
   if(IsFolder(&Item->Destination)){ // Folder
-   CreateFolder(Item->Destination.String);
+   CreateFolder(Item->Destination.UTF8());
 
   }else{ // File
-   Destination = FileSystem.Detail(Item->Destination.String);
+   Destination = FileSystem.Detail(Item->Destination.UTF8());
 
    if(!Destination || (
      Item ->Modified  > Destination->Modified
@@ -750,18 +750,18 @@ void ENGINE::BackupList(STRING* Incremental){
      Tasks->Contents && !ContentsEqual(Item)
     )
    ){
-    if(Destination && Incremental->Length()){
-     MoveToIncremental(Item->Destination.String, Incremental->String);
+    if(Destination && Incremental->Length32()){
+     MoveToIncremental(Item->Destination.UTF8(), Incremental->UTF8());
     }
 
-    if(Copy(Item)) LogBuffer.Append("Copied file:\r\n");
-    else           LogBuffer.Append("Failed to copy file:\r\n");
-    LogBuffer.Append(" Source:      ");
-    LogBuffer.Append(&Item->Source);
-    LogBuffer.Append("\r\n");
-    LogBuffer.Append(" Destination: ");
-    LogBuffer.Append(&Item->Destination);
-    LogBuffer.Append("\r\n");
+    if(Copy(Item)) LogBuffer += "Copied file:\r\n";
+    else           LogBuffer += "Failed to copy file:\r\n";
+    LogBuffer += " Source:      ";
+    LogBuffer += Item->Source;
+    LogBuffer += "\r\n";
+    LogBuffer += " Destination: ";
+    LogBuffer += Item->Destination;
+    LogBuffer += "\r\n";
 
    }else{
     DoneSize += Item->Size;
@@ -783,65 +783,65 @@ void ENGINE::AppendLocalTime(STRING* String, bool Filename){
   SYSTEMTIME Time;
   GetLocalTime(&Time);
 
-  String->Append((int)Time.wYear  ); String->Append('-');
-  if(Time.wMonth  < 10) String->Append('0');
-  String->Append((int)Time.wMonth ); String->Append('-');
-  if(Time.wDay    < 10) String->Append('0');
-  String->Append((int)Time.wDay   ); String->Append(", ");
-  if(Time.wHour   < 10) String->Append('0');
-  String->Append((int)Time.wHour  ); String->Append(Filename ? '\'' : ':');
-  if(Time.wMinute < 10) String->Append('0');
-  String->Append((int)Time.wMinute); String->Append(Filename ? '\'' : ':');
-  if(Time.wSecond < 10) String->Append('0');
-  String->Append((int)Time.wSecond); String->Append('.');
-  if(Time.wMilliseconds < 100) String->Append('0');
-  if(Time.wMilliseconds <  10) String->Append('0');
-  String->Append((int)Time.wMilliseconds);
+  *String += (int)Time.wYear  ; *String += '-';
+  if(Time.wMonth  < 10) *String += '0';
+  *String += (int)Time.wMonth ; *String += '-';
+  if(Time.wDay    < 10) *String += '0';
+  *String += (int)Time.wDay   ; *String += ", ";
+  if(Time.wHour   < 10) *String += '0';
+  *String += (int)Time.wHour  ; *String += Filename ? '\'' : ':';
+  if(Time.wMinute < 10) *String += '0';
+  *String += (int)Time.wMinute; *String += Filename ? '\'' : ':';
+  if(Time.wSecond < 10) *String += '0';
+  *String += (int)Time.wSecond; *String += '.';
+  if(Time.wMilliseconds < 100) *String += '0';
+  if(Time.wMilliseconds <  10) *String += '0';
+  *String += (int)Time.wMilliseconds;
 }
 //------------------------------------------------------------------------------
 
 void ENGINE::StartLog(const char* Title){
- LogBuffer.Set   (Title);
- LogBuffer.Append(" - ");
+ LogBuffer = Title;
+ LogBuffer += " - ";
  AppendLocalTime (&LogBuffer, false);
- LogBuffer.Append("\r\n");
- LogBuffer.Append(" Source:      ");
- LogBuffer.Append(&Tasks->Source);
- LogBuffer.Append("\r\n");
- LogBuffer.Append(" Destination: ");
- LogBuffer.Append(&Tasks->Destination);
- LogBuffer.Append("\r\n\r\n");
+ LogBuffer += "\r\n";
+ LogBuffer += " Source:      ";
+ LogBuffer += Tasks->Source;
+ LogBuffer += "\r\n";
+ LogBuffer += " Destination: ";
+ LogBuffer += Tasks->Destination;
+ LogBuffer += "\r\n\r\n";
 }
 //------------------------------------------------------------------------------
 
 void ENGINE::EndLog(){
- LogBuffer.Append("\r\nDone - ");
+ LogBuffer += "\r\nDone - ";
  AppendLocalTime (&LogBuffer, false);
- LogBuffer.Append("\r\n");
- LogBuffer.Append(
+ LogBuffer += "\r\n";
+ LogBuffer +=
   "----------------------------------------"
   "----------------------------------------"
- );
- LogBuffer.Append("\r\n\r\n");
+ ;
+ LogBuffer += "\r\n\r\n";
 
- if(Valid() && Tasks->Log.Length()){
+ if(Valid() && Tasks->Log.Length32()){
   FileWrapper File;
   if(
-   File.Open(Tasks->Log.String, FileWrapper::faWrite ) ||
-   File.Open(Tasks->Log.String, FileWrapper::faCreate)
+   File.Open(Tasks->Log.UTF8(), FileWrapper::faWrite ) ||
+   File.Open(Tasks->Log.UTF8(), FileWrapper::faCreate)
   ){
-   File.Write(LogBuffer.String, LogBuffer.Length());
+   File.Write(LogBuffer.UTF8(), LogBuffer.Length8());
    File.Close();
   }
  }
- LogBuffer.Clear();
+ LogBuffer = "";
 }
 //------------------------------------------------------------------------------
 
 void ENGINE::DoBackup(){
  StartLog("Backup");
 
- Tasks->Status.Set("Preparing");
+ Tasks->Status = "Preparing";
  Tasks->Remaining = 0;
 
  // Clear the list
@@ -852,13 +852,13 @@ void ENGINE::DoBackup(){
  char* DestinationPath = GetPath(&Tasks->Destination);
 
  STRING Incremental;
- if(Tasks->Incremental.Length()){
-  Incremental.Set(&Tasks->Incremental);
-  if(Incremental.String[Incremental.Length()-1] != '\\'){
-   Incremental.Append('\\');
+ if(Tasks->Incremental.Length32()){
+  Incremental = Tasks->Incremental;
+  if(Incremental.UTF8()[Incremental.Length8()-1] != '\\'){
+   Incremental += '\\';
   }
   AppendLocalTime(&Incremental, true);
-  Incremental.Append('\\');
+  Incremental += '\\';
  }
 
  // Make sure the destination path exists
@@ -870,7 +870,7 @@ void ENGINE::DoBackup(){
 
  }else{ // File
   FILE_SYSTEM        FileSystem;
-  FILE_SYSTEM::ITEM* File = FileSystem.Detail(Tasks->Source.String);
+  FILE_SYSTEM::ITEM* File = FileSystem.Detail(Tasks->Source.UTF8());
 
   if(File){
    Enqueue(
@@ -898,7 +898,7 @@ void ENGINE::DoBackup(){
 void ENGINE::DoSynchronise(){
  StartLog("Synchronise");
 
- Tasks->Status.Set("Preparing");
+ Tasks->Status = "Preparing";
  Tasks->Remaining = 0;
 
  // Clear the list
@@ -909,13 +909,13 @@ void ENGINE::DoSynchronise(){
  char* DestinationPath = GetPath(&Tasks->Destination);
 
  STRING Incremental;
- if(Tasks->Incremental.Length()){
-  Incremental.Set(&Tasks->Incremental);
-  if(Incremental.String[Incremental.Length()-1] != '\\'){
-   Incremental.Append('\\');
+ if(Tasks->Incremental.Length32()){
+  Incremental = Tasks->Incremental;
+  if(Incremental.UTF8()[Incremental.Length8()-1] != '\\'){
+   Incremental += '\\';
   }
   AppendLocalTime(&Incremental, true);
-  Incremental.Append('\\');
+  Incremental += '\\';
  }
 
  // Make sure the paths exist
@@ -934,7 +934,7 @@ void ENGINE::DoSynchronise(){
  if(Valid()){
   long double TempSize = DoneSize;
 
-  Tasks->Status.Set("Preparing");
+  Tasks->Status = "Preparing";
   ClearList();
   ListSize = DoneSize = TempSize;
 
@@ -956,7 +956,7 @@ void ENGINE::DoCompare(){
 
  StartLog("Compare");
 
- Tasks->Status.Set("Preparing");
+ Tasks->Status = "Preparing";
  Tasks->Remaining = 0;
 
  // Clear the list
@@ -969,15 +969,15 @@ void ENGINE::DoCompare(){
  // Make sure the paths exist
  Destination = FileSystem.Detail(SourcePath);
  if(!Destination){
-  LogBuffer.Append("Folder does not exist:\r\n ");
-  LogBuffer.Append(SourcePath);
-  LogBuffer.Append("\r\n");
+  LogBuffer += "Folder does not exist:\r\n ";
+  LogBuffer += SourcePath;
+  LogBuffer += "\r\n";
  }
  Destination = FileSystem.Detail(DestinationPath);
  if(!Destination){
-  LogBuffer.Append("Folder does not exist:\r\n ");
-  LogBuffer.Append(DestinationPath);
-  LogBuffer.Append("\r\n");
+  LogBuffer += "Folder does not exist:\r\n ";
+  LogBuffer += DestinationPath;
+  LogBuffer += "\r\n";
  }
 
  // Build the list (recursively)
@@ -992,50 +992,50 @@ void ENGINE::DoCompare(){
   List = List->Next;
 
   if(IsFolder(&Item->Destination)){ // Folder
-   Destination = FileSystem.Detail(Item->Destination.String);
+   Destination = FileSystem.Detail(Item->Destination.UTF8());
    if(!Destination){
-    LogBuffer.Append("Folder - Only one instance exists:\r\n ");
-    LogBuffer.Append(&Item->Source);
-    LogBuffer.Append("\r\n");
+    LogBuffer += "Folder - Only one instance exists:\r\n ";
+    LogBuffer += Item->Source;
+    LogBuffer += "\r\n";
    }
 
   }else{ // File
-   Destination = FileSystem.Detail(Item->Destination.String);
+   Destination = FileSystem.Detail(Item->Destination.UTF8());
 
    if(!Destination){
-    LogBuffer.Append("File - Only one instance exists:\r\n ");
-    LogBuffer.Append(&Item->Source);
-    LogBuffer.Append("\r\n");
+    LogBuffer += "File - Only one instance exists:\r\n ";
+    LogBuffer += Item->Source;
+    LogBuffer += "\r\n";
 
    }else{
     if(Item->Modified > Destination->Modified){
-     LogBuffer.Append("File - Different time-stamps:\r\n");
-     LogBuffer.Append(" Newer: ");
-     LogBuffer.Append(&Item->Source);
-     LogBuffer.Append("\r\n");
-     LogBuffer.Append(" Older: ");
-     LogBuffer.Append(&Item->Destination);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "File - Different time-stamps:\r\n";
+     LogBuffer += " Newer: ";
+     LogBuffer += Item->Source;
+     LogBuffer += "\r\n";
+     LogBuffer += " Older: ";
+     LogBuffer += Item->Destination;
+     LogBuffer += "\r\n";
     }
     if(Item->Size > Destination->Size){
-     LogBuffer.Append("File - Different sizes:\r\n");
-     LogBuffer.Append(" Larger: ");
-     LogBuffer.Append(&Item->Source);
-     LogBuffer.Append("\r\n");
-     LogBuffer.Append(" Smaller: ");
-     LogBuffer.Append(&Item->Destination);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "File - Different sizes:\r\n";
+     LogBuffer += " Larger: ";
+     LogBuffer += Item->Source;
+     LogBuffer += "\r\n";
+     LogBuffer += " Smaller: ";
+     LogBuffer += Item->Destination;
+     LogBuffer += "\r\n";
     }
     if(
      Item ->Modified == Destination->Modified &&
      Item ->Size     == Destination->Size     &&
      Tasks->Contents && !ContentsEqual(Item)
     ){
-     LogBuffer.Append("File - Different contents:\r\n ");
-     LogBuffer.Append(&Item->Source);
-     LogBuffer.Append("\r\n ");
-     LogBuffer.Append(&Item->Destination);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "File - Different contents:\r\n ";
+     LogBuffer += Item->Source;
+     LogBuffer += "\r\n ";
+     LogBuffer += Item->Destination;
+     LogBuffer += "\r\n";
     }
    }
 
@@ -1066,7 +1066,7 @@ void ENGINE::DoClean(){
 
  StartLog("Clean");
 
- Tasks->Status.Set("Preparing");
+ Tasks->Status = "Preparing";
  Tasks->Remaining = 0;
 
  // Clear the list
@@ -1077,13 +1077,13 @@ void ENGINE::DoClean(){
  char* DestinationPath = GetPath(&Tasks->Destination);
 
  STRING Incremental;
- if(Tasks->Incremental.Length()){
-  Incremental.Set(&Tasks->Incremental);
-  if(Incremental.String[Incremental.Length()-1] != '\\'){
-   Incremental.Append('\\');
+ if(Tasks->Incremental.Length32()){
+  Incremental = Tasks->Incremental;
+  if(Incremental.UTF8()[Incremental.Length8()-1] != '\\'){
+   Incremental += '\\';
   }
   AppendLocalTime(&Incremental, true);
-  Incremental.Append('\\');
+  Incremental += '\\';
  }
 
  // Build the list (recursively)
@@ -1109,38 +1109,38 @@ void ENGINE::DoClean(){
   List = List->Next;
 
   if(IsFolder(&Item->Destination)){ // Folder
-   Destination = FileSystem.Detail(Item->Destination.String);
+   Destination = FileSystem.Detail(Item->Destination.UTF8());
    if(!Destination){
-    if(FileSystem.Delete(Item->Source.String)){
-     LogBuffer.Append("Folder removed:\r\n ");
-     LogBuffer.Append(&Item->Source);
-     LogBuffer.Append("\r\n");
+    if(FileSystem.Delete(Item->Source.UTF8())){
+     LogBuffer += "Folder removed:\r\n ";
+     LogBuffer += Item->Source;
+     LogBuffer += "\r\n";
     }else{
-     LogBuffer.Append("Failed to remove folder:\r\n ");
-     LogBuffer.Append(&Item->Source);
-     LogBuffer.Append("\r\n");
-     LogBuffer.Append(" Error code ");
+     LogBuffer += "Failed to remove folder:\r\n ";
+     LogBuffer += Item->Source;
+     LogBuffer += "\r\n";
+     LogBuffer += " Error code ";
      AppendError     (&LogBuffer);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "\r\n";
     }
    }
 
   }else{ // File
-   Destination = FileSystem.Detail(Item->Destination.String);
+   Destination = FileSystem.Detail(Item->Destination.UTF8());
    if(!Destination){
-    if(Incremental.Length()){
-     MoveToIncremental(Item->Source.String, Incremental.String);
-    }else if(FileSystem.Delete(Item->Source.String)){
-     LogBuffer.Append("File deleted:\r\n ");
-     LogBuffer.Append(&Item->Source);
-     LogBuffer.Append("\r\n");
+    if(Incremental.Length32()){
+     MoveToIncremental(Item->Source.UTF8(), Incremental.UTF8());
+    }else if(FileSystem.Delete(Item->Source.UTF8())){
+     LogBuffer += "File deleted:\r\n ";
+     LogBuffer += Item->Source;
+     LogBuffer += "\r\n";
     }else{
-     LogBuffer.Append("Failed to delete file:\r\n ");
-     LogBuffer.Append(&Item->Source);
-     LogBuffer.Append("\r\n");
-     LogBuffer.Append(" Error code ");
+     LogBuffer += "Failed to delete file:\r\n ";
+     LogBuffer += Item->Source;
+     LogBuffer += "\r\n";
+     LogBuffer += " Error code ";
      AppendError     (&LogBuffer);
-     LogBuffer.Append("\r\n");
+     LogBuffer += "\r\n";
     }
    }
    DoneSize += Item->Size;
@@ -1246,11 +1246,11 @@ int ENGINE::Add(
   Task->Contents    = Contents;
   Task->Remaining   = 0.0;
 
-  Task->Log        .Set(Log);
-  Task->Status     .Set("Paused");
-  Task->Source     .Set(Source);
-  Task->Destination.Set(Destination);
-  Task->Incremental.Set(Incremental);
+  Task->Log         = Log;
+  Task->Status      = "Paused";
+  Task->Source      = Source;
+  Task->Destination = Destination;
+  Task->Incremental = Incremental;
 
   Task->Next = 0;
   Task->Prev = TasksTail;
@@ -1301,7 +1301,7 @@ void ENGINE::GetStatus(int ID, STRING* Status){
    if(Task->ID == ID) break;
    Task = Task->Next;
   }
-  if(Task) Status->Set(&Task->Status);
+  if(Task) *Status = Task->Status;
  MutEx.Release();
 }
 //------------------------------------------------------------------------------
@@ -1354,10 +1354,10 @@ void ENGINE::GetDescription(
    *Type     = Task->Type;
    *Contents = Task->Contents;
 
-   Log        ->Set(&Task->Log        );
-   Source     ->Set(&Task->Source     );
-   Destination->Set(&Task->Destination);
-   Incremental->Set(&Task->Incremental);
+   *Log         = Task->Log        ;
+   *Source      = Task->Source     ;
+   *Destination = Task->Destination;
+   *Incremental = Task->Incremental;
   }
  MutEx.Release();
 }

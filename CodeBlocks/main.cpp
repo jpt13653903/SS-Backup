@@ -78,10 +78,9 @@ void OnLoadScriptClick(){
  Options.lpstrFile[0] = 0;
 
  if(GetOpenFileName(&Options)){
-  UNICODE_CODEC Codec;
-  char*    UTF8 = Codec.GetUTF8(Options.lpstrFile);
-  Script  (UTF8);
-  delete[] UTF8;
+  STRING Codec;
+  Codec = Options.lpstrFile;
+  Script(Codec.UTF8());
  }
 
  delete[] Options.lpstrFile;
@@ -113,18 +112,18 @@ void OnSaveScriptClick(){
   GetLocalTime(&Time);
 
   STRING Buffer;
-  Buffer.Set("% Backup script exported on ");
-  Buffer.Append((int)Time.wYear  ); Buffer.Append('-');
-  if(Time.wMonth  < 10) Buffer.Append('0');
-  Buffer.Append((int)Time.wMonth ); Buffer.Append('-');
-  if(Time.wDay    < 10) Buffer.Append('0');
-  Buffer.Append((int)Time.wDay   ); Buffer.Append(", ");
-  if(Time.wHour   < 10) Buffer.Append('0');
-  Buffer.Append((int)Time.wHour  ); Buffer.Append(':');
-  if(Time.wMinute < 10) Buffer.Append('0');
-  Buffer.Append((int)Time.wMinute); Buffer.Append(':');
-  if(Time.wSecond < 10) Buffer.Append('0');
-  Buffer.Append((int)Time.wSecond); Buffer.Append("\r\n");
+  Buffer  = "% Backup script exported on ";
+  Buffer += (int)Time.wYear  ; Buffer += '-';
+  if(Time.wMonth  < 10) Buffer += '0';
+  Buffer += (int)Time.wMonth ; Buffer += '-';
+  if(Time.wDay    < 10) Buffer += '0';
+  Buffer += (int)Time.wDay   ; Buffer += ", ";
+  if(Time.wHour   < 10) Buffer += '0';
+  Buffer += (int)Time.wHour  ; Buffer += ':';
+  if(Time.wMinute < 10) Buffer += '0';
+  Buffer += (int)Time.wMinute; Buffer += ':';
+  if(Time.wSecond < 10) Buffer += '0';
+  Buffer += (int)Time.wSecond; Buffer += "\r\n";
 
   Engine->Pause();
    ENGINE::TYPE Type;
@@ -148,56 +147,56 @@ void OnSaveScriptClick(){
 
     if(Type != ENGINE::Exit){
      if(PrevContents != Contents){
-      Buffer.Append("\r\n[Contents]\r\n");
-      if(Contents) Buffer.Append("On\r\n");
-      else         Buffer.Append("Off\r\n");
+      Buffer += "\r\n[Contents]\r\n";
+      if(Contents) Buffer += "On\r\n";
+      else         Buffer += "Off\r\n";
       PrevContents = Contents;
      }
 
-     if(PrevIncremental.Compare(&Incremental)){
-      Buffer.Append("\r\n[Incremental]\r\n");
-      if(Incremental.Length()) Buffer.Append(&Incremental);
-      else                     Buffer.Append("Off");
-      Buffer.Append("\r\n");
-      PrevIncremental.Set(&Incremental);
+     if(PrevIncremental != Incremental){
+      Buffer += "\r\n[Incremental]\r\n";
+      if(Incremental.Length32()) Buffer += Incremental;
+      else                       Buffer += "Off";
+      Buffer += "\r\n";
+      PrevIncremental = Incremental;
      }
 
-     if(PrevLog.Compare(&Log)){
-      Buffer.Append("\r\n[Log]\r\n");
-      if(Log.Length()) Buffer.Append(&Log);
-      else             Buffer.Append("Off");
-      Buffer.Append("\r\n");
-      PrevLog.Set(&Log);
+     if(PrevLog != Log){
+      Buffer += "\r\n[Log]\r\n";
+      if(Log.Length32()) Buffer += Log;
+      else               Buffer += "Off";
+      Buffer += "\r\n";
+      PrevLog = Log;
      }
     }
 
     switch(Type){
      case ENGINE::Backup:
-      Buffer.Append("\r\n[Backup]\r\n");
-      Buffer.Append(&Source     ); Buffer.Append("\r\n");
-      Buffer.Append(&Destination); Buffer.Append("\r\n");
+      Buffer += "\r\n[Backup]\r\n";
+      Buffer += Source     ; Buffer += "\r\n";
+      Buffer += Destination; Buffer += "\r\n";
       break;
 
      case ENGINE::Synchronise:
-      Buffer.Append("\r\n[Synchronise]\r\n");
-      Buffer.Append(&Source     ); Buffer.Append("\r\n");
-      Buffer.Append(&Destination); Buffer.Append("\r\n");
+      Buffer += "\r\n[Synchronise]\r\n";
+      Buffer += Source     ; Buffer += "\r\n";
+      Buffer += Destination; Buffer += "\r\n";
       break;
 
      case ENGINE::Compare:
-      Buffer.Append("\r\n[Compare]\r\n");
-      Buffer.Append(&Source     ); Buffer.Append("\r\n");
-      Buffer.Append(&Destination); Buffer.Append("\r\n");
+      Buffer += "\r\n[Compare]\r\n";
+      Buffer += Source     ; Buffer += "\r\n";
+      Buffer += Destination; Buffer += "\r\n";
       break;
 
      case ENGINE::Clean:
-      Buffer.Append("\r\n[Clean]\r\n");
-      Buffer.Append(&Source     ); Buffer.Append("\r\n");
-      Buffer.Append(&Destination); Buffer.Append("\r\n");
+      Buffer += "\r\n[Clean]\r\n";
+      Buffer += Source     ; Buffer += "\r\n";
+      Buffer += Destination; Buffer += "\r\n";
       break;
 
      case ENGINE::Exit:
-      Buffer.Append("\r\n[Exit]\r\n");
+      Buffer += "\r\n[Exit]\r\n";
       break;
 
      default:
@@ -210,7 +209,7 @@ void OnSaveScriptClick(){
 
   FileWrapper File;
   if(File.Open(Options.lpstrFile, FileWrapper::faCreate)){
-   File.Write(Buffer.String, Buffer.Length());
+   File.Write(Buffer.UTF8(), Buffer.Length8());
    File.Close();
   }
  }
@@ -258,12 +257,12 @@ void AddTask(
  // Sanity check
  STRING source, destination, incremental, log;
 
- source     .Set(Source);
- destination.Set(Destination);
- incremental.Set(Incremental);
- log        .Set(Log);
+ source      = Source;
+ destination = Destination;
+ incremental = Incremental;
+ log         = Log;
 
- if(!source.Length()){
+ if(!source.Length32()){
   MessageBoxA(
    Window,
    "Source is empty.",
@@ -273,7 +272,7 @@ void AddTask(
   return;
  }
 
- if(!destination.Length()){
+ if(!destination.Length32()){
   MessageBoxA(
    Window,
    "Destination is empty.",
@@ -283,7 +282,7 @@ void AddTask(
   return;
  }
 
- if(!source.CompareNoCase(&destination)){
+ if(!source.CompareNoCase(destination)){
   MessageBoxA(
    Window,
    "Source and destination must be different.",
@@ -293,7 +292,7 @@ void AddTask(
   return;
  }
 
- if(Task != ENGINE::Backup && source.String[source.Length()-1] != '\\'){
+ if(Task != ENGINE::Backup && source.UTF8()[source.Length8()-1] != '\\'){
   MessageBoxA(
    Window,
    "Only backup tasks may have a file as source input.\n"
@@ -304,7 +303,7 @@ void AddTask(
   return;
  }
 
- if(destination.String[destination.Length()-1] != '\\'){
+ if(destination.UTF8()[destination.Length8()-1] != '\\'){
   MessageBoxA(
    Window,
    "Destination must be a folder.\n"
@@ -315,7 +314,7 @@ void AddTask(
   return;
  }
 
- if(incremental.Length() && incremental.String[incremental.Length()-1] != '\\'){
+ if(incremental.Length32() && incremental.UTF8()[incremental.Length8()-1] != '\\'){
   MessageBoxA(
    Window,
    "Incremental must be a folder.\n"
@@ -326,7 +325,7 @@ void AddTask(
   return;
  }
 
- if(log.Length() && log.String[log.Length()-1] == '\\'){
+ if(log.Length32() && log.UTF8()[log.Length8()-1] == '\\'){
   MessageBoxA(
    Window,
    "Log must be a file.",
@@ -339,19 +338,19 @@ void AddTask(
  STRING TaskString;
  switch(Task){
   case ENGINE::Backup:
-   TaskString.Set("Backup");
+   TaskString = "Backup";
    break;
 
   case ENGINE::Synchronise:
-   TaskString.Set("Synchronise");
+   TaskString = "Synchronise";
    break;
 
   case ENGINE::Compare:
-   TaskString.Set("Compare");
+   TaskString = "Compare";
    break;
 
   case ENGINE::Clean:
-   TaskString.Set("Clean");
+   TaskString = "Clean";
    break;
 
   default:
@@ -361,7 +360,7 @@ void AddTask(
  TempTask = new TASK;
 
  TempTask->ListIndex = TaskList->AddTask(
-  TaskString.String,
+  TaskString.UTF8(),
   Source,
   Destination,
   Contents,
@@ -409,11 +408,11 @@ void OnAddClick(){
 
  AddTask(
   TaskType,
-  source     .String,
-  destination.String,
+  source     .UTF8(),
+  destination.UTF8(),
   ContentsCheck,
-  incremental.String,
-  log        .String
+  incremental.UTF8(),
+  log        .UTF8()
  );
 }
 //------------------------------------------------------------------------------
@@ -483,8 +482,8 @@ void OnAboutClick(){
   L"jpt13653903@gmail.com\n"
   L"\n"
   L"Developed using:\n"
-  L"- Code::Blocks 12.11 <http://www.codeblocks.org/>\n"
-  L"- MinGW (tdm-1) 4.7.1 <http://tdm-gcc.tdragon.net/>\n"
+  L"- Code::Blocks 13.12 <http://www.codeblocks.org/>\n"
+  L"- MinGW (tdm-1) 4.8.1 <http://tdm-gcc.tdragon.net/>\n"
   L"\n"
   L"This program is free software: you can redistribute it and/or modify\n"
   L"it under the terms of the GNU General Public License as published by\n"
@@ -506,7 +505,7 @@ void OnAboutClick(){
 
 void TreePath2RealPath(STRING* TreePath, STRING* Path){
  int         Index  = 0;
- char*       Buffer = TreePath->String; // Shortcut
+ char*       Buffer = TreePath->UTF8(); // Shortcut
  FILE_SYSTEM FileSystem;
 
  if(
@@ -532,14 +531,14 @@ void TreePath2RealPath(STRING* TreePath, STRING* Path){
   Index = 9;
   while(Buffer[Index] && Buffer[Index] != '\\') Index++;
   if(Index > 11){ // Named
-   Path->Append(Buffer[Index-3]);
-   Path->Append(Buffer[Index-2]);
+   *Path += Buffer[Index-3];
+   *Path += Buffer[Index-2];
   }else{ // Unnamed
-   Path->Append(Buffer[Index-2]);
-   Path->Append(Buffer[Index-1]);
+   *Path += Buffer[Index-2];
+   *Path += Buffer[Index-1];
   }
  }
- while(Buffer[Index]) Path->Append(Buffer[Index++]);
+ while(Buffer[Index]) *Path += Buffer[Index++];
 }
 //------------------------------------------------------------------------------
 
@@ -551,7 +550,7 @@ void OnFoldersExpanding(HTREEITEM Item){
  Folders->GetPath(Item, &TreePath);
  Folders->Clear  (Item);
 
- if(!TreePath.Compare("Computer")){
+ if(TreePath == "Computer"){
   STRING   Drive;
   wchar_t  Root[4] = L"X:\\";
   wchar_t  Name[MAX_PATH+1];
@@ -563,42 +562,42 @@ void OnFoldersExpanding(HTREEITEM Item){
     Root[2] = L'\\';
     Name[0] = 0;
     if(GetVolumeInformation(Root, Name, MAX_PATH+1, 0, 0, 0, 0, 0)){
-     Drive.Set(Name);
+     Drive = Name;
     }else{
      int Error = GetLastError();
      if(Error == ERROR_NOT_READY){
       Drives >>= 1;
       continue;
      }
-     Drive.Set("");
+     Drive = "";
     }
     Root[2] = 0;
-    if(Drive.Length()){
-     Drive.Append(" (");
-     Drive.Append(Root);
-     Drive.Append(')');
+    if(Drive.Length32()){
+     Drive += " (";
+     Drive += Root;
+     Drive += ')';
     }else{
-     Drive.Append(Root);
+     Drive += Root;
     }
-    Folders->AddItem(Item, Drive.String, TREE::Drive);
+    Folders->AddItem(Item, Drive.UTF8(), TREE::Drive);
    }
    Drives >>= 1;
   }
  }else{
   TreePath2RealPath(&TreePath, &Path);
-  Path.Append('\\');
+  Path += '\\';
 
-  FileSystem.SetPath(Path.String);
+  FileSystem.SetPath(Path.UTF8());
 
   FILE_SYSTEM::ITEM* FileSystemItem;
   FileSystemItem = FileSystem.FirstFolder();
   while(FileSystemItem){
-   Folders->AddItem(Item, FileSystemItem->Name.String, TREE::Folder);
+   Folders->AddItem(Item, FileSystemItem->Name.UTF8(), TREE::Folder);
    FileSystemItem = FileSystem.NextFolder();
   }
   FileSystemItem = FileSystem.FirstFile();
   while(FileSystemItem){
-   Folders->AddItem(Item, FileSystemItem->Name.String, TREE::File);
+   Folders->AddItem(Item, FileSystemItem->Name.UTF8(), TREE::File);
    FileSystemItem = FileSystem.NextFile();
   }
  }
@@ -619,21 +618,21 @@ void OnButtonClick(HWND Sender){
  Folders->CurrentPath(&TreePath);
  TreePath2RealPath   (&TreePath, &Path);
 
- if(Path.Length() > 2){
-  FILE_SYSTEM::ITEM* Item = FileSystem.Detail(Path.String);
+ if(Path.Length8() > 2){
+  FILE_SYSTEM::ITEM* Item = FileSystem.Detail(Path.UTF8());
   if(Item){
-   if(Item->Attributes & FILE_ATTRIBUTE_DIRECTORY) Path.Append('\\');
+   if(Item->Attributes & FILE_ATTRIBUTE_DIRECTORY) Path += '\\';
   }else{
-   Path.Clear();
+   Path = "";
   }
  }else{
-  Path.Append('\\');
+  Path += '\\';
  }
 
-      if(Sender==SourceButton     ->Handle) Source     ->SetText(Path.String);
- else if(Sender==DestinationButton->Handle) Destination->SetText(Path.String);
- else if(Sender==IncrementalButton->Handle) Incremental->SetText(Path.String);
- else if(Sender==LogButton        ->Handle) Log        ->SetText(Path.String);
+      if(Sender==SourceButton     ->Handle) Source     ->SetText(Path.UTF8());
+ else if(Sender==DestinationButton->Handle) Destination->SetText(Path.UTF8());
+ else if(Sender==IncrementalButton->Handle) Incremental->SetText(Path.UTF8());
+ else if(Sender==LogButton        ->Handle) Log        ->SetText(Path.UTF8());
 }
 //------------------------------------------------------------------------------
 
@@ -681,7 +680,7 @@ void OnTimer(){
  Remaining = Engine->GetRemaining(Key.TaskID);
 
  if(Menu->GetPaused()) TaskList->SetStatus(0, "Paused");
- else                  TaskList->SetStatus(0, Status.String);
+ else                  TaskList->SetStatus(0, Status.UTF8());
 
  if(Remaining > 0.0){
   s         = fmod (Remaining , 60.0);
@@ -691,19 +690,19 @@ void OnTimer(){
   h         = fmod (Remaining , 60.0);
   Remaining = floor(Remaining / 60.0);
 
-  if(h < 10) Status.Set('0');
-  else       Status.Clear();
-  Status.Append(h);
-  Status.Append(':');
+  if(h < 10) Status = '0';
+  else       Status = "";
+  Status += h;
+  Status += ':';
 
-  if(m < 10) Status.Append('0');
-  Status.Append(m);
-  Status.Append(':');
+  if(m < 10) Status += '0';
+  Status += m;
+  Status += ':';
 
-  if(s < 10) Status.Append('0');
-  Status.Append(s);
+  if(s < 10) Status += '0';
+  Status += s;
 
-  TaskList->SetRemaining(0, Status.String);
+  TaskList->SetRemaining(0, Status.UTF8());
 
  }else{
   TaskList->SetRemaining(0, "-");
@@ -835,15 +834,15 @@ LRESULT CALLBACK WindowProcedure(
 
 void GetLine(STRING* Line){
  int j;
- Line->Clear();
+ *Line = "";
 
  while(Index < Length){
   // Read the line
   while(Index < Length){
    if(Buffer[Index] == '\r' || Buffer[Index] == '\n') break;
    // Ignore leading spaces
-   if(Line->Length() || (Buffer[Index] != ' ' && Buffer[Index] != '\t')){
-    Line->Append(Buffer[Index]);
+   if(Line->Length32() || (Buffer[Index] != ' ' && Buffer[Index] != '\t')){
+    *Line += Buffer[Index];
    }
    Index++;
   }
@@ -853,13 +852,13 @@ void GetLine(STRING* Line){
   }
 
   // Ignore trailing spaces
-  j = Line->Length()-1;
-  while(j >= 0 && (Line->String[j] == ' ' || Line->String[j] == '\t')) j--;
-  Line->SetLength(j+1);
+  j = Line->Length8()-1;
+  while(j >= 0 && ((*Line)[j] == ' ' || (*Line)[j] == '\t')) j--;
+  Line->UTF32()[j+1] = 0;
 
   // Ignore empty lines and comments
-  if     (Line->String[0] == '%') Line->Clear();
-  else if(Line->Length( )       ) return;
+  if     (Line->UTF8()[0] == '%') *Line = "";
+  else if(Line->Length32()      ) return;
  }
 }
 //------------------------------------------------------------------------------
@@ -878,9 +877,9 @@ void Script(const char* Filename){
 
  if(!File.Open(Filename, FileWrapper::faRead)){
   STRING s;
-  s.Set   ("Unable to open script:\n");
-  s.Append(Filename);
-  MessageBoxA(Window, s.String, "Error", MB_ICONERROR);
+  s = "Unable to open script:\n";
+  s += Filename;
+  MessageBoxA(Window, s.UTF8(), "Error", MB_ICONERROR);
   return;
  }
 
@@ -906,11 +905,11 @@ void Script(const char* Filename){
  Index = 0;
  while(Index < Length){
   GetLine(&Line);
-  while(Index < Length && Line.String[0] != '[') GetLine(&Line);
+  while(Index < Length && Line.UTF8()[0] != '[') GetLine(&Line);
 
   if(!Line.CompareNoCase("[Incremental]")){
    GetLine(&Incremental);
-   if(!Incremental.CompareNoCase("Off")) Incremental.Clear();
+   if(!Incremental.CompareNoCase("Off")) Incremental = "";
 
   }else if(!Line.CompareNoCase("[Contents]")){
    GetLine(&Line);
@@ -920,18 +919,18 @@ void Script(const char* Filename){
 
   }else if(!Line.CompareNoCase("[Log]")){
    GetLine(&Log);
-   if(!Log.CompareNoCase("Off")) Log.Clear();
+   if(!Log.CompareNoCase("Off")) Log = "";
 
   }else if(!Line.CompareNoCase("[Backup]")){
    GetLine(&Source);
    GetLine(&Destination);
    AddTask(
     ENGINE::Backup,
-    Source     .String,
-    Destination.String,
+    Source     .UTF8(),
+    Destination.UTF8(),
     LookInContents,
-    Incremental.String,
-    Log        .String
+    Incremental.UTF8(),
+    Log        .UTF8()
    );
 
   }else if(!Line.CompareNoCase("[Compare]")){
@@ -939,11 +938,11 @@ void Script(const char* Filename){
    GetLine(&Destination);
    AddTask(
     ENGINE::Compare,
-    Source     .String,
-    Destination.String,
+    Source     .UTF8(),
+    Destination.UTF8(),
     LookInContents,
-    Incremental.String,
-    Log        .String
+    Incremental.UTF8(),
+    Log        .UTF8()
    );
 
   }else if(!Line.CompareNoCase("[Clean]")){
@@ -951,11 +950,11 @@ void Script(const char* Filename){
    GetLine(&Destination);
    AddTask(
     ENGINE::Clean,
-    Source     .String,
-    Destination.String,
+    Source     .UTF8(),
+    Destination.UTF8(),
     LookInContents,
-    Incremental.String,
-    Log        .String
+    Incremental.UTF8(),
+    Log        .UTF8()
    );
 
   }else if(!Line.CompareNoCase("[Synchronise]")){
@@ -963,11 +962,11 @@ void Script(const char* Filename){
    GetLine(&Destination);
    AddTask(
     ENGINE::Synchronise,
-    Source     .String,
-    Destination.String,
+    Source     .UTF8(),
+    Destination.UTF8(),
     LookInContents,
-    Incremental.String,
-    Log        .String
+    Incremental.UTF8(),
+    Log        .UTF8()
    );
 
   }else if(!Line.CompareNoCase("[Script]")){
@@ -979,26 +978,26 @@ void Script(const char* Filename){
    IncludeLevel++;
 
    if(
-    (Line.Length() < 2) ||
+    (Line.Length8() < 2) ||
     (
-     (Line.String[1] != ':') &&
-     (Line.String[0] != '\\' || Line.String[0] != '\\')
+     (Line.UTF8()[1] != ':') &&
+     (Line.UTF8()[0] != '\\' || Line.UTF8()[0] != '\\')
     )
    ){
     for(j = 0; Filename[j]; j++);
     while(j && Filename[j] != '\\') j--;
     ((char*)Filename)[j] = 0;
-    Temp.Set(Filename);
+    Temp = Filename;
     ((char*)Filename)[j] = '\\';
-    Temp.Append('\\');
-    Temp.Append(&Line);
+    Temp += '\\';
+    Temp += Line;
    }else{
-    Temp.Set(&Line);
+    Temp = Line;
    }
-   if(Temp.Length() < 4 || Temp.String[Temp.Length()-4] != '.'){
-    Temp.Append(".BSc");
+   if(Temp.Length8() < 4 || Temp.UTF8()[Temp.Length8()-4] != '.'){
+    Temp += ".BSc";
    }
-   Script(Temp.String);
+   Script(Temp.UTF8());
 
    IncludeLevel--;
    Index  = LocalIndex;
@@ -1155,11 +1154,11 @@ int WINAPI WinMain(
  // Process the command-line
  if(ArgV){
   for(int j = 1; j < ArgC; j++){
-   Arg.Set(ArgV[j]);
+   Arg = ArgV[j];
    if(!Arg.CompareNoCase("-run")){
     if(Menu->GetPaused()) OnPauseClick();
    }else{
-    Script(Arg.String);
+    Script(Arg.UTF8());
    }
   }
   LocalFree(ArgV);

@@ -43,14 +43,12 @@ void COMBO_BOX::Clear(){
 //------------------------------------------------------------------------------
 
 void COMBO_BOX::AddItem(const char* Item){
- UNICODE_CODEC Codec;
- wchar_t* WideItem = Codec.GetWideString(Item);
+ STRING Codec;
+ Codec = Item;
 
- ComboBox_AddString(Handle, WideItem);
+ ComboBox_AddString(Handle, Codec.UTF16());
  if(!ItemCount) ComboBox_SetCurSel(Handle, 0);
  ItemCount++;
-
- delete[] WideItem;
 }
 //------------------------------------------------------------------------------
 
@@ -59,7 +57,7 @@ void COMBO_BOX::GetItem(STRING* Item){
  wchar_t* Text   = new wchar_t[Length+1];
 
  ComboBox_GetText(Handle, Text, Length+1);
- Item->Set(Text);
+ *Item = Text;
 
  delete[] Text;
 }

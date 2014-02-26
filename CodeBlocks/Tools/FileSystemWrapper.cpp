@@ -25,7 +25,7 @@ static int ITEM_Compare(void* Left, void* Right){
  FILE_SYSTEM::ITEM* left  = (FILE_SYSTEM::ITEM*)Left;
  FILE_SYSTEM::ITEM* right = (FILE_SYSTEM::ITEM*)Right;
 
- return left->Name.CompareNoCase(&right->Name);
+ return left->Name.CompareNoCase(right->Name);
 }
 //------------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ void FILE_SYSTEM::GetHomeFolder(STRING* Path){
  if(!GetUserProfileDirectory(Token, WidePath, &Size)) return;
  CloseHandle(Token);
 
- Path->Set(WidePath);
+ *Path = WidePath;
 }
 //------------------------------------------------------------------------------
 
@@ -82,7 +82,6 @@ void FILE_SYSTEM::SetPath(const char* Parent){
  ITEM*           Item;
  STRING          Path;
  HANDLE          Search;
- UNICODE_CODEC   Codec;
  WIN32_FIND_DATA FindData;
 
  if(!Parent) return;
@@ -90,18 +89,15 @@ void FILE_SYSTEM::SetPath(const char* Parent){
  Clear();
 
  if(Parent[0] && Parent[1] != ':'){
-  Path.Set(Parent);
+  Path = Parent;
  }else{
-  Path.Set   ("\\\\?\\"); // Use long paths
-  Path.Append(Parent);
+  Path  = "\\\\?\\"; // Use long paths
+  Path += Parent;
  }
- if(Path.String[Path.Length()-1] != '\\') Path.Append('\\');
- Path.Append('*');
+ if(Path.UTF8()[Path.Length8()-1] != '\\') Path += '\\';
+ Path += '*';
 
- wchar_t* WidePath = Codec.GetWideString(Path.String);
-
- Search = FindFirstFile(WidePath, &FindData);
- delete[] WidePath;
+ Search = FindFirstFile(Path.UTF16(), &FindData);
 
  if(Search != INVALID_HANDLE_VALUE){
   do{
@@ -110,7 +106,7 @@ void FILE_SYSTEM::SetPath(const char* Parent){
     wcscmp(FindData.cFileName, L"..")
    ){
     Item = new ITEM;
-    Item->Name.Set    (FindData.cFileName);
+    Item->Name       = FindData.cFileName;
     Item->Created    = FindData.ftCreationTime  .dwHighDateTime * 0x1p32L +
                        FindData.ftCreationTime  .dwLowDateTime;
     Item->Accessed   = FindData.ftLastAccessTime.dwHighDateTime * 0x1p32L +
@@ -154,7 +150,6 @@ FILE_SYSTEM::ITEM* FILE_SYSTEM::Detail(const char* File){
  ITEM*           Item = 0;
  STRING          Path;
  HANDLE          Search;
- UNICODE_CODEC   Codec;
  WIN32_FIND_DATA FindData;
 
  if(!File) return 0;
@@ -162,24 +157,19 @@ FILE_SYSTEM::ITEM* FILE_SYSTEM::Detail(const char* File){
  Clear();
 
  if(File[0] && File[1] != ':'){
-  Path.Set(File);
+  Path  = File;
  }else{
-  Path.Set   ("\\\\?\\"); // Use long paths
-  Path.Append(File);
+  Path  = "\\\\?\\"; // Use long paths
+  Path += File;
  }
 
- wchar_t* WidePath = Codec.GetWideString(Path.String);
+ if(Path.UTF8()[Path.Length8()-1] == '\\') Path.UTF8()[Path.Length8()-1] = 0;
 
- int j;
- for(j = 0; WidePath[j]; j++);
- if(WidePath[j-1] == '\\') WidePath[j-1] = 0;
-
- Search = FindFirstFile(WidePath, &FindData);
- delete[] WidePath;
+ Search = FindFirstFile(Path.UTF16(), &FindData);
 
  if(Search != INVALID_HANDLE_VALUE){
   Item = new ITEM;
-  Item->Name.Set    (FindData.cFileName);
+  Item->Name       = FindData.cFileName;
   Item->Created    = FindData.ftCreationTime  .dwHighDateTime * 0x1p32L +
                      FindData.ftCreationTime  .dwLowDateTime;
   Item->Accessed   = FindData.ftLastAccessTime.dwHighDateTime * 0x1p32L +
@@ -202,22 +192,17 @@ FILE_SYSTEM::ITEM* FILE_SYSTEM::Detail(const char* File){
 bool FILE_SYSTEM::CreateFolder(const char* Folder){
  bool          Result;
  STRING        Path;
- UNICODE_CODEC Codec;
 
  if(!Folder) return false;
 
  if(Folder[0] && Folder[1] != ':'){
-  Path.Set(Folder);
+  Path  = Folder;
  }else{
-  Path.Set   ("\\\\?\\"); // Use long paths
-  Path.Append(Folder);
+  Path  = "\\\\?\\"; // Use long paths
+  Path += Folder;
  }
 
- wchar_t* WidePath = Codec.GetWideString(Path.String);
-
- Result = CreateDirectory(WidePath, 0);
-
- delete[] WidePath;
+ Result = CreateDirectory(Path.UTF16(), 0);
 
  return Result;
 }
@@ -226,43 +211,34 @@ bool FILE_SYSTEM::CreateFolder(const char* Folder){
 bool FILE_SYSTEM::Rename(const char* From, const char* To){
  bool          Result;
  STRING        FromString, ToString;
- UNICODE_CODEC Codec;
 
  if(!From) return false;
  if(!To  ) return false;
 
  if(From[0] && From[1] != ':'){
-  FromString.Set(From);
+  FromString  = From;
  }else{
-  FromString.Set   ("\\\\?\\"); // Use long paths
-  FromString.Append(From);
+  FromString  = "\\\\?\\"; // Use long paths
+  FromString += From;
  }
 
  if(To[0] && To[1] != ':'){
-  ToString.Set(To);
+  ToString  = To;
  }else{
-  ToString.Set   ("\\\\?\\"); // Use long paths
-  ToString.Append(To);
+  ToString  = "\\\\?\\"; // Use long paths
+  ToString += To;
  }
 
- wchar_t* WideFrom = Codec.GetWideString(FromString.String);
- wchar_t* WideTo   = Codec.GetWideString(ToString  .String);
-
- int j;
- for(j = 0; WideFrom[j]; j++);
- if(WideFrom[j-1] == '\\') WideFrom[j-1] = 0;
-
- for(j = 0; WideTo[j]; j++);
- if(WideTo[j-1] == '\\') WideTo[j-1] = 0;
+ if(FromString.UTF8()[FromString.Length8()-1] == '\\')
+  FromString.UTF8()[FromString.Length8()-1] = 0;
+ if(ToString  .UTF8()[ToString  .Length8()-1] == '\\')
+  ToString  .UTF8()[ToString  .Length8()-1] = 0;
 
  Result = MoveFileEx(
-  WideFrom,
-  WideTo,
+  FromString.UTF16(),
+  ToString  .UTF16(),
   0 // Fail when drives are different
  );
-
- delete[] WideFrom;
- delete[] WideTo;
 
  return Result;
 }
@@ -271,29 +247,22 @@ bool FILE_SYSTEM::Rename(const char* From, const char* To){
 bool FILE_SYSTEM::Delete(const char* File){
  bool          Result;
  STRING        Path;
- UNICODE_CODEC Codec;
 
  if(!File) return false;
 
  if(File[0] && File[1] != ':'){
-  Path.Set(File);
+  Path  = File;
  }else{
-  Path.Set   ("\\\\?\\"); // Use long paths
-  Path.Append(File);
+  Path  = "\\\\?\\"; // Use long paths
+  Path += File;
  }
 
- wchar_t* WidePath = Codec.GetWideString(Path.String);
-
- int j;
- for(j = 0; WidePath[j]; j++);
- if(WidePath[j-1] == '\\'){
-  WidePath[j-1] = 0;
-  Result = RemoveDirectory(WidePath);
+ if(Path.UTF16()[Path.Length16()-1] == '\\'){
+  Path.UTF16()[Path.Length16()-1] = 0;
+  Result = RemoveDirectory(Path.UTF16());
  }else{
-  Result = DeleteFile(WidePath);
+  Result = DeleteFile(Path.UTF16());
  }
-
- delete[] WidePath;
 
  return Result;
 }

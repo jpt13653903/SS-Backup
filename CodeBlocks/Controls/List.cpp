@@ -91,7 +91,7 @@ int LIST::AddTask(
  const char* Incremental,
  const char* Log
 ){
- UNICODE_CODEC Codec;
+ STRING Codec;
 
  LVITEM Item;
  Item.mask       = LVIF_TEXT;
@@ -99,36 +99,36 @@ int LIST::AddTask(
  Item.cchTextMax = 0;
 
  Item.iSubItem = 0;
- Item.pszText  = Codec.GetWideString(Task);
+ Codec = Task;
+ Item.pszText  = Codec.UTF16();
  ListView_InsertItem(Handle, &Item);
- delete[] Item.pszText;
  ItemCount++;
 
  Item.iSubItem = 3;
- Item.pszText  = Codec.GetWideString(Source);
+ Codec = Source;
+ Item.pszText  = Codec.UTF16();
  ListView_SetItem(Handle, &Item);
- delete[] Item.pszText;
 
  Item.iSubItem = 4;
- Item.pszText  = Codec.GetWideString(Destination);
+ Codec = Destination;
+ Item.pszText  = Codec.UTF16();
  ListView_SetItem(Handle, &Item);
- delete[] Item.pszText;
 
  Item.iSubItem = 5;
- Item.pszText  = Codec.GetWideString(Incremental);
+ Codec = Incremental;
+ Item.pszText  = Codec.UTF16();
  ListView_SetItem(Handle, &Item);
- delete[] Item.pszText;
 
  Item.iSubItem = 6;
- if(Contents) Item.pszText = Codec.GetWideString("On");
- else         Item.pszText = Codec.GetWideString("Off");
+ if(Contents) Codec = "On";
+ else         Codec = "Off";
+ Item.pszText = Codec.UTF16();
  ListView_SetItem(Handle, &Item);
- delete[] Item.pszText;
 
  Item.iSubItem = 7;
- Item.pszText  = Codec.GetWideString(Log);
+ Codec = Log;
+ Item.pszText  = Codec.UTF16();
  ListView_SetItem(Handle, &Item);
- delete[] Item.pszText;
 
  SetStatus   (Item.iItem, "Paused");
  SetRemaining(Item.iItem, "-");
@@ -143,7 +143,7 @@ void LIST::SetStatus(int Index, const char* Status){
  if(Index <  0        ) return;
  if(Index >= ItemCount) return;
 
- UNICODE_CODEC Codec;
+ STRING Codec;
 
  LVITEM Item;
  Item.mask       = LVIF_TEXT;
@@ -151,9 +151,9 @@ void LIST::SetStatus(int Index, const char* Status){
  Item.cchTextMax = 0;
 
  Item.iSubItem = 1;
- Item.pszText  = Codec.GetWideString(Status);
+ Codec = Status;
+ Item.pszText  = Codec.UTF16();
  ListView_SetItem(Handle, &Item);
- delete[] Item.pszText;
 }
 //------------------------------------------------------------------------------
 
@@ -161,7 +161,7 @@ void LIST::SetRemaining(int Index, const char* Remaining){
  if(Index <  0        ) return;
  if(Index >= ItemCount) return;
 
- UNICODE_CODEC Codec;
+ STRING Codec;
 
  LVITEM Item;
  Item.mask       = LVIF_TEXT;
@@ -169,9 +169,9 @@ void LIST::SetRemaining(int Index, const char* Remaining){
  Item.cchTextMax = 0;
 
  Item.iSubItem = 2;
- Item.pszText  = Codec.GetWideString(Remaining);
+ Codec = Remaining;
+ Item.pszText  = Codec.UTF16();
  ListView_SetItem(Handle, &Item);
- delete[] Item.pszText;
 }
 //------------------------------------------------------------------------------
 

@@ -70,7 +70,7 @@ void TREE::Clear(HTREEITEM Parent){
 void TREE::AddItem(HTREEITEM Parent, const char* Text, TYPE Type){
  if(!Text) return;
 
- UNICODE_CODEC Codec;
+ STRING Codec;
 
  TVINSERTSTRUCT Insert;
  if(Parent) Insert.hParent = Parent;
@@ -81,25 +81,25 @@ void TREE::AddItem(HTREEITEM Parent, const char* Text, TYPE Type){
  TVITEM* Item = &Insert.item;
  Item->mask       = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
  Item->iImage     = Item->iSelectedImage = (int)Type;
- Item->pszText    = Codec.GetWideString(Text);
+ Codec = Text;
+ Item->pszText    = Codec.UTF16();
  Item->cchTextMax = 0;
  Item->cChildren  = 1;
 
  Insert.hParent = TreeView_InsertItem(Handle, &Insert);
- delete[] Item->pszText;
 
  if(Type != File){
-  Item->pszText = Codec.GetWideString("Dummy File");
+  Codec = "Dummy File";
+  Item->pszText = Codec.UTF16();
   Item->iImage  = Item->iSelectedImage = (int)File;
   TreeView_InsertItem(Handle, &Insert);
-  delete[] Item->pszText;
  }
 }
 //------------------------------------------------------------------------------
 
 void TREE::GetPath(HTREEITEM Item, STRING* Path){
  if(!Item){ // This is the root of the tree
-  Path->Clear();
+  *Path = "";
   return;
  }
 
@@ -116,8 +116,8 @@ void TREE::GetPath(HTREEITEM Item, STRING* Path){
  TreeView_GetItem(Handle, &Node);
 
  // Append this name
- if(Path->Length()) Path->Append('\\');
- Path->Append(Node.pszText);
+ if(Path->Length32()) *Path += '\\';
+ *Path += Node.pszText;
 
  // Clean-up
  delete[] Node.pszText;
