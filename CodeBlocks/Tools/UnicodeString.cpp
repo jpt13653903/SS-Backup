@@ -506,6 +506,18 @@ char32 STRING::operator[] (size_t Index){
 }
 //------------------------------------------------------------------------------
 
+void STRING::SetLength32(size_t Length){
+ Invalidate();
+
+ if(Length < Length_32){
+  Length_32          = Length;
+  Data_32[Length_32] = 0;
+ }else{
+  while(Length_32 < Length) Append((char32)0);
+ }
+}
+//------------------------------------------------------------------------------
+
 size_t STRING::Length8(){
  Update8();
  return Length_8;

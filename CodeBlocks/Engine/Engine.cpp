@@ -425,7 +425,7 @@ void ENGINE::BuildItems(const char* SourcePath, const char* DestinationPath){
 //------------------------------------------------------------------------------
 
 bool ENGINE::IsFolder(STRING* File){
- return File->UTF8()[File->Length8()-1] == '\\';
+ return (*File)[File->Length32()-1] == '\\';
 }
 //------------------------------------------------------------------------------
 
@@ -1085,6 +1085,7 @@ void ENGINE::DoClean(){
   AppendLocalTime(&Incremental, true);
   Incremental += '\\';
  }
+
 
  // Build the list (recursively)
  BuildItems(DestinationPath, SourcePath);

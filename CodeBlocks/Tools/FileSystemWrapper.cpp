@@ -163,7 +163,7 @@ FILE_SYSTEM::ITEM* FILE_SYSTEM::Detail(const char* File){
   Path += File;
  }
 
- if(Path.UTF8()[Path.Length8()-1] == '\\') Path.UTF8()[Path.Length8()-1] = 0;
+ if(Path[Path.Length32()-1] == '\\') Path.SetLength32(Path.Length32()-1);
 
  Search = FindFirstFile(Path.UTF16(), &FindData);
 
@@ -229,10 +229,10 @@ bool FILE_SYSTEM::Rename(const char* From, const char* To){
   ToString += To;
  }
 
- if(FromString.UTF8()[FromString.Length8()-1] == '\\')
-  FromString.UTF8()[FromString.Length8()-1] = 0;
- if(ToString  .UTF8()[ToString  .Length8()-1] == '\\')
-  ToString  .UTF8()[ToString  .Length8()-1] = 0;
+ if(FromString            [FromString.Length32()-1] == '\\')
+    FromString.SetLength32(FromString.Length32()-1);
+ if(ToString              [ToString  .Length32()-1] == '\\')
+    ToString  .SetLength32(ToString  .Length32()-1);
 
  Result = MoveFileEx(
   FromString.UTF16(),
@@ -257,8 +257,8 @@ bool FILE_SYSTEM::Delete(const char* File){
   Path += File;
  }
 
- if(Path.UTF16()[Path.Length16()-1] == '\\'){
-  Path.UTF16()[Path.Length16()-1] = 0;
+ if(Path[Path.Length32()-1] == '\\'){
+  Path.SetLength32(Path.Length32()-1);
   Result = RemoveDirectory(Path.UTF16());
  }else{
   Result = DeleteFile(Path.UTF16());
