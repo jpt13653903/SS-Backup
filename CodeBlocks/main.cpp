@@ -26,7 +26,7 @@ void OnResize(){
  RECT Rect;
  GetClientRect(Window, &Rect);
 
- x = Rect.right / 2 - 76;
+ x = Rect.right / 2 - LW - 12;
  Task       ->SetWidth(x);
  Source     ->SetWidth(x);
  Destination->SetWidth(x);
@@ -34,7 +34,7 @@ void OnResize(){
  Contents   ->SetWidth(x);
  Log        ->SetWidth(x);
 
- x += 80;
+ x += LW + 16;
  TaskButton       ->SetLeft(x);
  SourceButton     ->SetLeft(x);
  DestinationButton->SetLeft(x);
@@ -475,7 +475,7 @@ void OnManualClick(){
 void OnAboutClick(){
  MessageBox(
   Window,
-  L"Simply-Scripted Backup, Beta Version\n"
+  L"Simply-Scripted Backup, Version 1.0\n"
   L"Built on "__DATE__" at "__TIME__"\n"
   L"\n"
   L"Copyright (C) John-Philip Taylor\n"
@@ -711,12 +711,16 @@ void OnTimer(){
 }
 //------------------------------------------------------------------------------
 
+bool Initialising = true;
+
 LRESULT CALLBACK WindowProcedure(
  HWND   Handle,
  UINT   Message,
  WPARAM wParam,
  LPARAM lParam
 ){
+ if(Initialising) return DefWindowProc(Handle, Message, wParam, lParam);
+
  RECT*       Rect;
  NMHDR*      NotifyHeader;
  NMTREEVIEW* TreeViewNotify;
@@ -1095,19 +1099,19 @@ int WINAPI WinMain(
  SendMessage(Window, WM_SETFONT, (WPARAM)Font, 0);
 
  // Create the controls
- TaskLabel         = new LABEL    (  8,  11,  64, L"Task:");
- SourceLabel       = new LABEL    (  8,  35,  64, L"Source:");
- DestinationLabel  = new LABEL    (  8,  60,  64, L"Destination:");
- IncrementalLabel  = new LABEL    (  8,  85,  64, L"Incremental:");
- ContentsLabel     = new LABEL    (  8, 111,  64, L"Contents:");
- LogLabel          = new LABEL    (  8, 135,  64, L"Log:");
+ TaskLabel         = new LABEL    (    8,  11,  LW, L"Task:");
+ SourceLabel       = new LABEL    (    8,  35,  LW, L"Source:");
+ DestinationLabel  = new LABEL    (    8,  60,  LW, L"Destination:");
+ IncrementalLabel  = new LABEL    (    8,  85,  LW, L"Incremental:");
+ ContentsLabel     = new LABEL    (    8, 111,  LW, L"Contents:");
+ LogLabel          = new LABEL    (    8, 135,  LW, L"Log:");
 
- Task              = new COMBO_BOX( 76,   7, 200);
- Source            = new TEXT_BOX ( 76,  33, 200);
- Destination       = new TEXT_BOX ( 76,  58, 200);
- Incremental       = new TEXT_BOX ( 76,  83, 200);
- Contents          = new COMBO_BOX( 76, 107, 200);
- Log               = new TEXT_BOX ( 76, 133, 200);
+ Task              = new COMBO_BOX(LW+12,   7, 200);
+ Source            = new TEXT_BOX (LW+12,  33, 200);
+ Destination       = new TEXT_BOX (LW+12,  58, 200);
+ Incremental       = new TEXT_BOX (LW+12,  83, 200);
+ Contents          = new COMBO_BOX(LW+12, 107, 200);
+ Log               = new TEXT_BOX (LW+12, 133, 200);
 
  TaskButton        = new BUTTON   (280,   8,  30, L"\x25B6");
  SourceButton      = new BUTTON   (280,  33,  30, L"\x21D0");
@@ -1117,6 +1121,9 @@ int WINAPI WinMain(
 
  Folders  = new TREE(314, 8, 200, 146);
  TaskList = new LIST(8, 158, 506, 200);
+
+ // From here on, the full message handler my run...
+ Initialising = false;
 
  Task->AddItem("Backup");
  Task->AddItem("Synchronise");
