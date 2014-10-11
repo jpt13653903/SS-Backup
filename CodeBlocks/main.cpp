@@ -1122,7 +1122,7 @@ int WINAPI WinMain(
  Folders  = new TREE(314, 8, 200, 146);
  TaskList = new LIST(8, 158, 506, 200);
 
- // From here on, the full message handler my run...
+ // From here on, the full message handler may run...
  Initialising = false;
 
  Task->AddItem("Backup");

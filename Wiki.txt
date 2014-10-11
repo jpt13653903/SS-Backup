@@ -122,9 +122,7 @@ Script recursion is limited to 1000 levels, so accidentally adding a circular re
 
 ## 6. Bugs
 
-As the project is still in Beta phase, some bugs can be expected. For a list of known bugs (and the opportunity to post your own), see the [discussions page](https://sourceforge.net/p/ss-backup/discussion/bugs).
-
-This said, I use SS-Backup as my main daily backup utility, so it is quite stable.  I would recommend careful checking of the resulting backup folders though.
+Please post any bugs you may find on the [discussions page](https://sourceforge.net/p/ss-backup/discussion/bugs).
 
 ## 7. Future Version Ideas
 
