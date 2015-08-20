@@ -35,6 +35,7 @@ class ENGINE{
  public:
   enum TYPE{
    Backup,
+   Clone,
    Synchronise,
    Compare,
    Clean,
@@ -113,7 +114,7 @@ class ENGINE{
          char*  Buffer2,
    unsigned     Used
   );
-  bool ContentsEqual(LIST*        Item);
+  bool ContentsEqual(LIST* Item);
 
   bool MoveToIncremental(const char* File, const char* Incremental);
 
@@ -124,7 +125,8 @@ class ENGINE{
   void EndLog  ();
 
   void BackupList   (STRING* Incremental);
-  void DoBackup     ();
+  void CloneList    (STRING* Incremental);
+  void DoBackup     (bool Clone);
   void DoSynchronise();
   void DoCompare    ();
   void DoClean      ();

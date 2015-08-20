@@ -177,6 +177,12 @@ void OnSaveScriptClick(){
       Buffer += Destination; Buffer += "\r\n";
       break;
 
+     case ENGINE::Clone:
+      Buffer += "\r\n[Clone]\r\n";
+      Buffer += Source     ; Buffer += "\r\n";
+      Buffer += Destination; Buffer += "\r\n";
+      break;
+
      case ENGINE::Synchronise:
       Buffer += "\r\n[Synchronise]\r\n";
       Buffer += Source     ; Buffer += "\r\n";
@@ -292,10 +298,14 @@ void AddTask(
   return;
  }
 
- if(Task != ENGINE::Backup && source.UTF8()[source.Length8()-1] != '\\'){
+ if(
+  Task != ENGINE::Backup &&
+  Task != ENGINE::Clone  &&
+  source.UTF8()[source.Length8()-1] != '\\'
+ ){
   MessageBoxA(
    Window,
-   "Only backup tasks may have a file as source input.\n"
+   "Only backup and clone tasks may have a file as source input.\n"
    "Folders must have a trailing '\\'.",
    "Error adding task",
    MB_ICONERROR
@@ -339,6 +349,10 @@ void AddTask(
  switch(Task){
   case ENGINE::Backup:
    TaskString = "Backup";
+   break;
+
+  case ENGINE::Clone:
+   TaskString = "Clone";
    break;
 
   case ENGINE::Synchronise:
@@ -402,6 +416,7 @@ void OnAddClick(){
  else                              ContentsCheck = false;
 
  if     (!task.CompareNoCase("Backup"     )) TaskType = ENGINE::Backup;
+ else if(!task.CompareNoCase("Clone"      )) TaskType = ENGINE::Clone;
  else if(!task.CompareNoCase("Synchronise")) TaskType = ENGINE::Synchronise;
  else if(!task.CompareNoCase("Compare"    )) TaskType = ENGINE::Compare;
  else if(!task.CompareNoCase("Clean"      )) TaskType = ENGINE::Clean;
@@ -937,6 +952,18 @@ void Script(const char* Filename){
     Log        .UTF8()
    );
 
+  }else if(!Line.CompareNoCase("[Clone]")){
+   GetLine(&Source);
+   GetLine(&Destination);
+   AddTask(
+    ENGINE::Clone,
+    Source     .UTF8(),
+    Destination.UTF8(),
+    LookInContents,
+    Incremental.UTF8(),
+    Log        .UTF8()
+   );
+
   }else if(!Line.CompareNoCase("[Compare]")){
    GetLine(&Source);
    GetLine(&Destination);
@@ -1125,7 +1152,8 @@ int WINAPI WinMain(
  // From here on, the full message handler may run...
  Initialising = false;
 
- Task->AddItem("Backup");
+ Task->AddItem("Backup"); // Backup when newer
+ Task->AddItem("Clone");  // Backup when different
  Task->AddItem("Synchronise");
  Task->AddItem("Compare");
  Task->AddItem("Clean");

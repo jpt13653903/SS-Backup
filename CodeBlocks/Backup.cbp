@@ -12,7 +12,6 @@
 				<Option object_output="obj/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters='&quot;W:\Backup Scripts\Programs.BSc&quot;' />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>

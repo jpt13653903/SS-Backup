@@ -779,6 +779,56 @@ void ENGINE::BackupList(STRING* Incremental){
 }
 //------------------------------------------------------------------------------
 
+void ENGINE::CloneList(STRING* Incremental){
+ LIST*              Item;
+ STRING             String;
+ FILE_SYSTEM        FileSystem;
+ FILE_SYSTEM::ITEM* Destination;
+
+ while(Valid() && List){
+  Item = List;
+  List = List->Next;
+
+  if(IsFolder(&Item->Destination)){ // Folder
+   CreateFolder(Item->Destination.UTF8());
+
+  }else{ // File
+   Destination = FileSystem.Detail(Item->Destination.UTF8());
+
+   if(!Destination                            ||
+     Item ->Modified != Destination->Modified ||
+     Item ->Size     != Destination->Size     ||
+    (Tasks->Contents && !ContentsEqual(Item))
+   ){
+    if(Destination && Incremental->Length32()){
+     MoveToIncremental(Item->Destination.UTF8(), Incremental->UTF8());
+    }
+
+    if(Copy(Item)) LogBuffer += "Copied file:\r\n";
+    else           LogBuffer += "Failed to copy file:\r\n";
+    LogBuffer += " Source:      ";
+    LogBuffer += Item->Source;
+    LogBuffer += "\r\n";
+    LogBuffer += " Destination: ";
+    LogBuffer += Item->Destination;
+    LogBuffer += "\r\n";
+
+   }else{
+    DoneSize += Item->Size;
+   }
+  }
+
+  UpdateStatus();
+
+  delete Item;
+
+  MutEx.Release();
+   Sleep(0);
+  MutEx.Obtain();
+ }
+}
+//------------------------------------------------------------------------------
+
 void ENGINE::AppendLocalTime(STRING* String, bool Filename){
   SYSTEMTIME Time;
   GetLocalTime(&Time);
@@ -838,8 +888,9 @@ void ENGINE::EndLog(){
 }
 //------------------------------------------------------------------------------
 
-void ENGINE::DoBackup(){
- StartLog("Backup");
+void ENGINE::DoBackup(bool Clone){
+ if(Clone) StartLog("Clone" );
+ else      StartLog("Backup");
 
  Tasks->Status = "Preparing";
  Tasks->Remaining = 0;
@@ -886,7 +937,9 @@ void ENGINE::DoBackup(){
 
  // Do the backup
  StartTime = GetTickCount();
- BackupList(&Incremental);
+
+ if(Clone) CloneList (&Incremental);
+ else      BackupList(&Incremental);
 
  delete[] SourcePath;
  delete[] DestinationPath;
@@ -1183,7 +1236,11 @@ void ENGINE::Run(){
     CurrentID = Tasks->ID;
     switch(Tasks->Type){
      case Backup:
-      DoBackup();
+      DoBackup(false);
+      break;
+
+     case Clone:
+      DoBackup(true);
       break;
 
      case Synchronise:
