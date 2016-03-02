@@ -480,9 +480,10 @@ void OnPauseClick(){
 //------------------------------------------------------------------------------
 
 void OnManualClick(){
- WinExec(
-  "explorer.exe \"https://sourceforge.net/p/ss-backup/wiki/Home/\"",
-  SW_MAXIMIZE
+ ShellExecute(
+  0, L"open",
+  L"\"https://sourceforge.net/p/ss-backup/wiki/Home/\"",
+  0, 0, SW_MAXIMIZE
  );
 }
 //------------------------------------------------------------------------------
