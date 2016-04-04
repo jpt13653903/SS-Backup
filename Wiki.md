@@ -48,19 +48,23 @@ It is recommended to have the source and destination folders on different drives
 
 All folders are traversed recursively.
 
-### 3.3 Synchronise
+### 3.3 Clone
+
+Similar to Backup, but it performs the copy if anything differs (file size, modification date or, optionally, contents).
+
+### 3.4 Synchronise
 
 Synchronising does the same as backup, but in both directions.  The source, in this case, must also be a folder.  If you want to synchronise single files within a folder you have to call Backup twice: once for each direction.
 
-### 3.4 Compare
+### 3.5 Compare
 
 The compare task performs a compare on the source and destination folders, storing the result in a log file.  Files are compared for modification time-stamp, size and, optionally, contents.  If the file exists only in one or the other, this fact is also logged.
 
-### 3.5 Clean
+### 3.6 Clean
 
 Cleaning is useful for backups of active projects, where the source changes structure often.  The source and destination folders are compared, and destination files and folders that does not exist in the source folder are deleted.
 
-### 3.6 Exit
+### 3.7 Exit
 
 Exiting SS-Backup is also implemented as a task, so the engine thread must be running for the program to exit.
 
@@ -105,6 +109,8 @@ are:
     - Followed by a single line specifying the incremental folder for subsequent tasks, or "Off", which disables the incremental feature.
 - \[Backup\]
     - Followed by two lines, the first specifying the source file or folder and the second the destination folder.
+- \[Clone\]
+    - Followed by two lines, the first specifying the source file or folder and the second the destination folder.
 - \[Synchronise\]
     - Followed by two lines, the first specifying the source folder and the second the destination folder.
 - \[Compare\]
@@ -147,5 +153,4 @@ Please [contact me](https://sourceforge.net/p/ss-backup/discussion/create_topic)
 
 [[members limit=20]]
 [[download_button]]
-
 
