@@ -1,11 +1,9 @@
-Files in this folder
---------------------
+## Notable files
 
-- **SS-Backup** &ndash; The main executable
+- [**SS-Backup**](https://sourceforge.net/projects/ss-backup/files/latest/download) &ndash; The main executable
 - **bsc.vim**   &ndash; VIM syntax highlighting for Scripts
 
-Release notes
--------------
+## Release notes
 
-See [the wiki](Wiki.md) for more information.
+See [the wiki](https://sourceforge.net/p/ss-backup/wiki/Home/) for more information.
 
