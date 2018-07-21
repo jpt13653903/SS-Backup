@@ -147,7 +147,7 @@ I often upload the same version more than once, with subsequent uploads incorpor
 
 ## 9. Source
 
-The source is available from the [git repository](https://sourceforge.net/p/ss-backup/code/).  It is a MinGW project, with Code::Blocks as IDE.
+The source is available from the [git repository](https://sourceforge.net/p/ss-backup/code/) and [GitHub](https://github.com/jpt13653903/SS-Backup).  It is a MinGW project, with Code::Blocks as IDE.
 
 Please [contact me](https://sourceforge.net/p/ss-backup/discussion/create_topic) if you are enthusiastic enough to have ported the project to Mac OS X, Linux or your favourite operating system.  I'd like to post the ported versions.
 
